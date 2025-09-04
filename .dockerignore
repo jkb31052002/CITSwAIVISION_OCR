@@ -1,0 +1,11 @@
+.git
+.gitignore
+venv
+__pycache__/
+*.pyc
+*.png
+*.jpg
+*.jpeg
+*.pdf
+.env
+official_models
