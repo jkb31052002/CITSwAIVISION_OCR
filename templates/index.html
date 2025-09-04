@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Container OCR Extractor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --card-border: #e0e0e0;
+            --text-muted: #6c757d;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--secondary-color);
+        }
+        
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .app-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .app-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .upload-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid var(--card-border);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+        
+        .movement-selector {
+            display: flex;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .movement-option {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .movement-option.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .movement-option:hover:not(.active) {
+            background-color: #f8f9fa;
+        }
+        
+        .preview-container {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .preview-placeholder {
+            color: var(--text-muted);
+            text-align: center;
+        }
+        
+        .preview-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+        
+        .custom-file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .extract-btn {
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 0;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        
+        .extract-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .extract-btn:active {
+            transform: translateY(0);
+        }
+        
+        .extract-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s;
+        }
+        
+        .result-header {
+            padding: 15px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-content {
+            padding: 20px;
+        }
+        
+        .info-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .info-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 8px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        
+        .info-value {
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+        
+        .verification-badge {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-yes {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+        }
+        
+        .badge-no {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .door-detection-badge {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .door-detected {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+        }
+        
+        .door-not-detected {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .feedback-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .btn-feedback {
+            flex: 1;
+            padding: 12px 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-feedback i {
+            margin-right: 8px;
+        }
+        
+        .btn-correct {
+            background-color: var(--success-color);
+            margin-right: 8px;
+        }
+        
+        .btn-correct:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-wrong {
+            background-color: var(--danger-color);
+            margin-left: 8px;
+        }
+        
+        .btn-wrong:hover {
+            background-color: #c0392b;
+        }
+        
+        .spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 0;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 15px;
+            }
+            
+            .preview-container {
+                height: 180px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                margin-bottom: 15px;
+            }
+            
+            .info-value {
+                text-align: left;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="app-header">
+        <h2 class="app-title">Container OCR Extractor</h2>
+        <p class="app-subtitle">Upload a container image to extract details</p>
+    </div>
+    
+    <div class="upload-card">
+        <div class="form-group">
+            <label class="form-label">Movement Type</label>
+            <div class="movement-selector">
+                <button type="button" class="movement-option active" data-value="DEPOT_IN">
+                    <i class="fas fa-arrow-down"></i> DEPOT IN
+                </button>
+                <button type="button" class="movement-option" data-value="DEPOT_OUT">
+                    <i class="fas fa-arrow-up"></i> DEPOT OUT
+                </button>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="locationInput" class="form-label">Location</label>
+            <select id="locationInput" class="form-select">
+                <option value="INHAL">INHAL</option>
+                <option value="INCPY">INCPY</option>
+                <option value="INMHC">INMHC</option>
+            </select>
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <div class="preview-placeholder" id="previewPlaceholder">
+                <i class="fas fa-camera"></i>
+                <p>Tap to select an image</p>
+            </div>
+            <img id="imagePreview" style="display: none;">
+            <input type="file" id="fileInput" class="custom-file-input" accept="image/*">
+        </div>
+        
+        <button id="extractBtn" class="btn extract-btn w-100" disabled>
+            <i class="fas fa-search"></i> Extract Information
+        </button>
+    </div>
+    
+    <div id="resultCard" class="result-card" style="display: none;">
+        <div class="result-header">
+            <span>Extracted Information</span>
+            <div>
+                <span id="verificationBadge" class="verification-badge"></span>
+                <span id="doorDetectionBadge" class="door-detection-badge"></span>
+            </div>
+        </div>
+        
+        <div class="result-content" id="resultContent">
+            <!-- Content will be filled dynamically -->
+        </div>
+        
+        <div class="feedback-buttons p-3">
+            <button id="btnCorrect" class="btn-feedback btn-correct">
+                <i class="fas fa-check"></i> Correct
+            </button>
+            <button id="btnWrong" class="btn-feedback btn-wrong">
+                <i class="fas fa-times"></i> Wrong
+            </button>
+        </div>
+    </div>
+    
+        <div id="loadingIndicator" class="spinner-container" style="display: none;">
+                <div class="spinner"></div>
+        </div>
+    
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Edit Extracted Values</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editForm">
+                            <div class="mb-2">
+                                <label class="form-label">Container Number</label>
+                                <input type="text" class="form-control" id="editContainerNumber" name="container_number">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">ISO Code</label>
+                                <input type="text" class="form-control" id="editIsoCode" name="iso_code">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Max Gross Weight (kg)</label>
+                                <input type="number" class="form-control" id="editMaxGrossKg" name="max_gross_kg" placeholder="Enter weight in kg">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Tare Weight (kg)</label>
+                                <input type="number" class="form-control" id="editTareKg" name="tare_kg" placeholder="Enter weight in kg">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Net Weight (kg)</label>
+                                <input type="number" class="form-control" id="editNetKg" name="net_kg" placeholder="Enter weight in kg">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Cubic Capacity (m³)</label>
+                                <input type="number" step="0.1" class="form-control" id="editCuM" name="cu_m" placeholder="Enter capacity in cubic meters">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveEditBtn">Save & Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const extractBtn = document.getElementById('extractBtn');
+        const resultCard = document.getElementById('resultCard');
+        const resultContent = document.getElementById('resultContent');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const verificationBadge = document.getElementById('verificationBadge');
+        const doorDetectionBadge = document.getElementById('doorDetectionBadge');
+        const btnCorrect = document.getElementById('btnCorrect');
+        const btnWrong = document.getElementById('btnWrong');
+        const locationInput = document.getElementById('locationInput');
+        const movementOptions = document.querySelectorAll('.movement-option');
+        
+        let selectedMovement = 'DEPOT_IN';
+        
+        // Handle movement selection
+        movementOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                movementOptions.forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                selectedMovement = this.getAttribute('data-value');
+            });
+        });
+        
+        // Global variable to store base64 image data
+        window.currentImageBase64 = "";
+        
+        // Function to compress image and convert to base64
+        function compressImageToBase64(file, maxSizeKB = 300) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    // Calculate new dimensions to reduce file size
+                    let { width, height } = img;
+                    const maxDimension = 1024; // Max width or height
+                    
+                    if (width > height && width > maxDimension) {
+                        height = (height * maxDimension) / width;
+                        width = maxDimension;
+                    } else if (height > maxDimension) {
+                        width = (width * maxDimension) / height;
+                        height = maxDimension;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Draw and compress
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Start with high quality and reduce if needed
+                    let quality = 0.9;
+                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    
+                    // Reduce quality until file size is acceptable
+                    while (dataUrl.length > maxSizeKB * 1024 * 1.33 && quality > 0.1) { // 1.33 factor for base64 overhead
+                        quality -= 0.1;
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+                    
+                    resolve(dataUrl);
+                };
+                
+                img.src = URL.createObjectURL(file);
+            });
+        }
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                
+                // Generate compressed base64 for later use
+                compressImageToBase64(file).then(base64Data => {
+                    window.currentImageBase64 = base64Data;
+                });
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    previewPlaceholder.style.display = 'none';
+                    extractBtn.disabled = false;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Handle extract button click
+        extractBtn.addEventListener('click', function() {
+            if (!fileInput.files || !fileInput.files[0]) return;
+            
+            // Show loading indicator
+            resultCard.style.display = 'none';
+            loadingIndicator.style.display = 'flex';
+            errorMessage.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            formData.append('movement', selectedMovement);
+            formData.append('location', locationInput.value || 'INHAL');
+            
+            fetch('/extract', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('=== EXTRACT API Response ===');
+                console.log(JSON.stringify(data, null, 2));
+                console.log('============================');
+                
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                // Display result
+                displayResult(data);
+                resultCard.style.display = 'block';
+            })
+            .catch(error => {
+                loadingIndicator.style.display = 'none';
+                showError('Error processing the request. Please try again.');
+                console.error('Error:', error);
+            });
+        });
+        
+        // Display the extraction result
+        function displayResult(data) {
+            // Store the data for editing
+            window.lastExtractedData = data;
+            
+            // Set verification badge
+            const verified = data.verified_status === 1;
+            verificationBadge.textContent = verified ? 'Verified' : 'Not Verified';
+            verificationBadge.className = `verification-badge ${verified ? 'badge-yes' : 'badge-no'}`;
+            
+            // Set door detection badge (handle case where door_detection might not be present)
+            const doorDetected = data.door_detection && data.door_detection.door_detected;
+            doorDetectionBadge.textContent = doorDetected ? 'Door Detected' : 'No Door';
+            doorDetectionBadge.className = `door-detection-badge ${doorDetected ? 'door-detected' : 'door-not-detected'}`;
+            
+            // Clear previous content
+            resultContent.innerHTML = '';
+            
+            // Movement and Location Section
+            const movementSection = document.createElement('div');
+            movementSection.className = 'info-section';
+            movementSection.innerHTML = `
+                <div class="section-title"><i class="fas fa-route"></i> Movement Information</div>
+                <div class="info-row">
+                    <span class="info-label">Movement</span>
+                    <span class="info-value">${data.movement}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location</span>
+                    <span class="info-value">${data.location}</span>
+                </div>
+            `;
+            resultContent.appendChild(movementSection);
+            
+            // Container Information Section
+            const containerSection = document.createElement('div');
+            containerSection.className = 'info-section';
+            containerSection.innerHTML = `
+                <div class="section-title"><i class="fas fa-box"></i> Container Information</div>
+                <div class="info-row">
+                    <span class="info-label">Container Number</span>
+                    <span class="info-value">${data.container_number || 'Not detected'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ISO Code</span>
+                    <span class="info-value">${data.iso_code || 'Not detected'}</span>
+                </div>
+            `;
+            resultContent.appendChild(containerSection);
+            
+            // Weight Information Section
+            const weightSection = document.createElement('div');
+            weightSection.className = 'info-section';
+            weightSection.innerHTML = `
+                <div class="section-title"><i class="fas fa-weight-hanging"></i> Weight Information</div>
+                <div class="info-row">
+                    <span class="info-label">Max Gross Weight</span>
+                    <span class="info-value">
+                        ${data.max_gross_weight.kg ? data.max_gross_weight.kg + ' kg' : 'Not detected'} / 
+                        ${data.max_gross_weight.lbs ? data.max_gross_weight.lbs + ' lbs' : 'Not detected'}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tare Weight</span>
+                    <span class="info-value">
+                        ${data.tare_weight.kg ? data.tare_weight.kg + ' kg' : 'Not detected'} / 
+                        ${data.tare_weight.lbs ? data.tare_weight.lbs + ' lbs' : 'Not detected'}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Net Weight</span>
+                    <span class="info-value">
+                        ${data.net_weight.kg ? data.net_weight.kg + ' kg' : 'Not detected'} / 
+                        ${data.net_weight.lbs ? data.net_weight.lbs + ' lbs' : 'Not detected'}
+                    </span>
+                </div>
+            `;
+            resultContent.appendChild(weightSection);
+            
+            // Capacity Information Section
+            const capacitySection = document.createElement('div');
+            capacitySection.className = 'info-section';
+            capacitySection.innerHTML = `
+                <div class="section-title"><i class="fas fa-cube"></i> Capacity Information</div>
+                <div class="info-row">
+                    <span class="info-label">Cubic Capacity</span>
+                    <span class="info-value">
+                        ${data.cu_cap.cubic_meters ? data.cu_cap.cubic_meters + ' m³' : 'Not detected'} / 
+                        ${data.cu_cap.cubic_feet ? data.cu_cap.cubic_feet + ' ft³' : 'Not detected'}
+                    </span>
+                </div>
+            `;
+            resultContent.appendChild(capacitySection);
+            
+            // Door Detection Information Section (only show if data exists)
+            if (data.door_detection) {
+                const doorSection = document.createElement('div');
+                doorSection.className = 'info-section';
+                doorSection.innerHTML = `
+                    <div class="section-title"><i class="fas fa-door-open"></i> Door Detection</div>
+                    <div class="info-row">
+                        <span class="info-label">Door Detected</span>
+                        <span class="info-value">${data.door_detection.door_detected ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Confidence</span>
+                        <span class="info-value">${(data.door_detection.max_confidence * 100).toFixed(1)}%</span>
+                    </div>
+                `;
+                resultContent.appendChild(doorSection);
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function showFeedbackResult(isCorrect) {
+            const feedback = isCorrect ? 'correct' : 'wrong';
+            
+            // Create a feedback indicator
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = `feedback-indicator ${isCorrect ? 'correct-feedback' : 'wrong-feedback'}`;
+            feedbackDiv.innerHTML = `
+                <div class="feedback-icon">
+                    <i class="fas fa-${isCorrect ? 'check-circle' : 'times-circle'}"></i>
+                </div>
+                <div class="feedback-text">
+                    Marked as ${isCorrect ? 'Correct' : 'Wrong'}
+                </div>
+            `;
+            
+            // Style the feedback
+            feedbackDiv.style.position = 'fixed';
+            feedbackDiv.style.top = '50%';
+            feedbackDiv.style.left = '50%';
+            feedbackDiv.style.transform = 'translate(-50%, -50%)';
+            feedbackDiv.style.backgroundColor = isCorrect ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
+            feedbackDiv.style.color = 'white';
+            feedbackDiv.style.padding = '20px 30px';
+            feedbackDiv.style.borderRadius = '10px';
+            feedbackDiv.style.textAlign = 'center';
+            feedbackDiv.style.zIndex = '1000';
+            feedbackDiv.style.display = 'flex';
+            feedbackDiv.style.flexDirection = 'column';
+            feedbackDiv.style.alignItems = 'center';
+            feedbackDiv.style.justifyContent = 'center';
+            
+            // Style the icon
+            const iconDiv = feedbackDiv.querySelector('.feedback-icon');
+            iconDiv.style.fontSize = '3rem';
+            iconDiv.style.marginBottom = '10px';
+            
+            // Style the text
+            const textDiv = feedbackDiv.querySelector('.feedback-text');
+            textDiv.style.fontSize = '1.2rem';
+            textDiv.style.fontWeight = '600';
+            
+            // Add to body
+            document.body.appendChild(feedbackDiv);
+            
+            // Remove after 2 seconds
+            setTimeout(() => {
+                feedbackDiv.style.opacity = '0';
+                feedbackDiv.style.transition = 'opacity 0.5s';
+                
+                setTimeout(() => {
+                    document.body.removeChild(feedbackDiv);
+                    
+                    // Reset the form to upload a new image
+                    imagePreview.style.display = 'none';
+                    previewPlaceholder.style.display = 'flex';
+                    extractBtn.disabled = true;
+                    fileInput.value = '';
+                    resultCard.style.display = 'none';
+                }, 500);
+            }, 2000);
+        }
+        
+        // Handle feedback buttons
+        btnCorrect.addEventListener('click', function() {
+            // If correct, send the original data to external API
+            const originalData = window.lastExtractedData;
+            if (originalData) {
+                const payload = {
+                    ...originalData,
+                    original_data: originalData,
+                    door_detection: originalData.door_detection || {}
+                };
+                
+                // Show loading indicator
+                loadingIndicator.style.display = 'flex';
+                
+                // Send to external API via our backend
+                fetch('/save_correct_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('=== SAVE_CORRECT_DATA API Response ===');
+                    console.log(JSON.stringify(data, null, 2));
+                    console.log('=====================================');
+                    
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (data.success) {
+                        showFeedbackResult(true);
+                    } else {
+                        showError(`Failed to save data: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingIndicator.style.display = 'none';
+                    showError('Error saving data to external API. Please try again.');
+                });
+            } else {
+                showFeedbackResult(true);
+            }
+        });
+        
+        btnWrong.addEventListener('click', function() {
+            // Populate modal with current extracted values
+            const data = window.lastExtractedData;
+            if (!data) return;
+            
+            // Set verified_status to 0 when Wrong is clicked
+            window.lastExtractedData.verified_status = 0;
+            
+            // Store original values for comparison
+            window.originalValues = {
+                container_number: data.container_number || '',
+                iso_code: data.iso_code || '',
+                max_gross_weight: (data.max_gross_weight && data.max_gross_weight.kg) ? data.max_gross_weight.kg : '',
+                tare_weight: (data.tare_weight && data.tare_weight.kg) ? data.tare_weight.kg : '',
+                net_weight: (data.net_weight && data.net_weight.kg) ? data.net_weight.kg : '',
+                cu_cap: (data.cu_cap && data.cu_cap.cubic_meters) ? data.cu_cap.cubic_meters : ''
+            };
+            
+            // Populate form fields
+            document.getElementById('editContainerNumber').value = window.originalValues.container_number;
+            document.getElementById('editIsoCode').value = window.originalValues.iso_code;
+            document.getElementById('editMaxGrossKg').value = window.originalValues.max_gross_weight;
+            document.getElementById('editTareKg').value = window.originalValues.tare_weight;
+            document.getElementById('editNetKg').value = window.originalValues.net_weight;
+            document.getElementById('editCuM').value = window.originalValues.cu_cap;
+            
+            // Show modal
+            var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            editModal.show();
+        });
+
+        // Store last extracted data for editing
+        window.lastExtractedData = null;
+
+        // Handle save in modal
+        document.getElementById('saveEditBtn').addEventListener('click', function() {
+            // Get the original data to preserve movement, location, and verified status
+            const originalData = window.lastExtractedData;
+            
+            // Get edited values and perform conversions
+            const maxGrossKg = document.getElementById('editMaxGrossKg').value;
+            const tareKg = document.getElementById('editTareKg').value;
+            const netKg = document.getElementById('editNetKg').value;
+            const cuM = document.getElementById('editCuM').value;
+            const containerNumber = document.getElementById('editContainerNumber').value;
+            const isoCode = document.getElementById('editIsoCode').value;
+            
+            // Convert kg to lbs (1 kg = 2.20462 lbs)
+            const maxGrossLbs = maxGrossKg ? Math.round(parseFloat(maxGrossKg) * 2.20462).toString() : '';
+            const tareLbs = tareKg ? Math.round(parseFloat(tareKg) * 2.20462).toString() : '';
+            const netLbs = netKg ? Math.round(parseFloat(netKg) * 2.20462).toString() : '';
+            
+            // Convert m³ to ft³ (1 m³ = 35.3147 ft³)
+            const cuFt = cuM ? Math.round(parseFloat(cuM) * 35.3147).toString() : '';
+            
+            // Check if there are any changes
+            const hasChanges = (
+                containerNumber !== (originalData.container_number || '') ||
+                isoCode !== (originalData.iso_code || '') ||
+                maxGrossKg !== ((originalData.max_gross_weight && originalData.max_gross_weight.kg) ? originalData.max_gross_weight.kg : '') ||
+                tareKg !== ((originalData.tare_weight && originalData.tare_weight.kg) ? originalData.tare_weight.kg : '') ||
+                netKg !== ((originalData.net_weight && originalData.net_weight.kg) ? originalData.net_weight.kg : '') ||
+                cuM !== ((originalData.cu_cap && originalData.cu_cap.cubic_meters) ? originalData.cu_cap.cubic_meters : '')
+            );
+            
+            // Create the complete transaction object for original_data field (only if there are changes)
+            let originalDataValue = "";
+            if (hasChanges) {
+                originalDataValue = originalData;
+            }
+            
+            // Gather complete updated values
+            const payload = {
+                movement: originalData.movement,
+                location: originalData.location,
+                base64_image: window.currentImageBase64 || "",
+                container_number: containerNumber || null,
+                iso_code: isoCode || null,
+                max_gross_weight: {
+                    kg: maxGrossKg || null,
+                    lbs: maxGrossLbs || null
+                },
+                tare_weight: {
+                    kg: tareKg || null,
+                    lbs: tareLbs || null
+                },
+                net_weight: {
+                    kg: netKg || null,
+                    lbs: netLbs || null
+                },
+                verified_status: 0,
+                original_data: originalDataValue,
+                cu_cap: {
+                    cubic_meters: cuM || null,
+                    cubic_feet: cuFt || null
+                },
+                door_detection: originalData.door_detection || {}
+            };
+
+            // Show loading indicator
+            loadingIndicator.style.display = 'flex';
+            
+            // First send to backend to update display
+            fetch('/update_extracted', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('=== UPDATE_EXTRACTED API Response (Save Edit) ===');
+                console.log(JSON.stringify(data, null, 2));
+                console.log('===============================================');
+                
+                // Hide modal
+                var editModalEl = document.getElementById('editModal');
+                var modalInstance = bootstrap.Modal.getInstance(editModalEl);
+                modalInstance.hide();
+                
+                // Now send to external API
+                return fetch('/save_correct_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('=== SAVE_CORRECT_DATA API Response (Save Edit) ===');
+                console.log(JSON.stringify(data, null, 2));
+                console.log('===============================================');
+                
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                
+                if (data.success) {
+                    // Show updated result
+                    displayResult(payload);
+                    resultCard.style.display = 'block';
+                    showFeedbackResult(true);
+                } else {
+                    showError(`Failed to save data to external API: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingIndicator.style.display = 'none';
+                showError('Error saving data to external API. Please try again.');
+            });
+        });
+    });
+</script>
+</body>
+</html>
